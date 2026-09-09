@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FastReport.Designer/FastReport.Designer.csproj" />
+  <Project Path="FastReport.Domain/FastReport.Domain.csproj" />
+</Solution>
