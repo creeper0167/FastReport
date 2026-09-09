@@ -5,8 +5,54 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FastReport.Designer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="450" Width="800"
+        WindowState="Maximized">
+    <Grid Background="#F5F5F5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <!-- Toolbox -->
+            <ColumnDefinition Width="*"/>
+            <!-- Canvas/Designer -->
+            <ColumnDefinition Width="300"/>
+            <!-- Properties -->
+        </Grid.ColumnDefinitions>
 
+        <!-- پنل سمت چپ: Toolbox -->
+        <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
+            <StackPanel Margin="10">
+                <TextBlock Text="Toolbox" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
+
+                <!-- این دکمه را بعداً قابل درگ می‌کنیم -->
+                <Button Name="btnDragText" Content="Text Box" Height="35" Margin="0,0,0,10" Background="#E3F2FD" Cursor="Hand"
+                        PreviewMouseLeftButtonDown="btnDragText_PreviewMouseLeftButtonDown"/>
+                <Button Name="btnDragImage" Content="Image" Height="35" Margin="0,0,0,10" Background="#E3F2FD" Cursor="Hand"/>
+            </StackPanel>
+        </Border>
+
+        <!-- پنل وسط: بوم طراحی (Canvas) -->
+        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <!-- یک صفحه A4 فرضی در مرکز -->
+                <Border Background="White" Width="794" Height="1123" Margin="40" 
+                        VerticalAlignment="Top" HorizontalAlignment="Center">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Opacity="0.2" ShadowDepth="2"/>
+                    </Border.Effect>
+
+                    <!-- این Canvas جایی است که المان‌ها روی آن رها می‌شوند -->
+                    <Canvas Name="DesignCanvas" Background="Transparent"
+                            AllowDrop="True" Drop="DesignCanvas_Drop"/>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- پنل سمت راست: تنظیمات -->
+        <Border Grid.Column="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1,0,0,0">
+            <StackPanel Margin="10">
+                <TextBlock Text="Properties" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
+                <TextBlock Text="Select an element to edit" Foreground="Gray"/>
+                <!-- بعداً کنترل Property Grid را اینجا اضافه می‌کنیم -->
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
