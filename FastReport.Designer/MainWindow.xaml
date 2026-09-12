@@ -4,10 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FastReport.Designer"
+        xmlns:ribbon="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         WindowState="Maximized">
     <Grid Background="#F5F5F5">
+        <!-- اضافه کردن ردیف‌ها برای جدا کردن منو از محیط طراحی -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
             <!-- Toolbox -->
@@ -17,8 +24,60 @@
             <!-- Properties -->
         </Grid.ColumnDefinitions>
 
-        <!-- پنل سمت چپ: Toolbox -->
-        <Border Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
+        <!-- منوی بالای صفحه (ردیف 0، کشیده شده روی تمام 3 ستون) -->
+        <Menu Grid.Row="0" Grid.ColumnSpan="3" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="5,2">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open Report" Click="MenuItem_Open_Click"/>
+                <MenuItem Header="_Save Report" Click="MenuItem_Save_Click"/>
+                <Separator/>
+                <!-- یک خط جداکننده -->
+                <MenuItem Header="Export to _PDF" Click="MenuItem_ExportPdf_Click"/>
+            </MenuItem>
+        </Menu>
+        <!-- جایگزین کردن بخش Menu با Ribbon -->
+        <ribbon:Ribbon Grid.Row="0" Grid.ColumnSpan="3" Background="#F3F3F3" BorderBrush="#D4D4D4">
+
+            <!-- دکمه اصلی File در گوشه سمت چپ بالا -->
+            <ribbon:Ribbon.ApplicationMenu>
+                <ribbon:RibbonApplicationMenu>
+                    <ribbon:RibbonApplicationMenuItem Header="Open Report..." Click="MenuItem_Open_Click"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Save Report..." Click="MenuItem_Save_Click"/>
+                    <ribbon:RibbonApplicationMenuItem Header="Export to PDF..." Click="MenuItem_ExportPdf_Click"/>
+                </ribbon:RibbonApplicationMenu>
+            </ribbon:Ribbon.ApplicationMenu>
+
+            <!-- تب پیش‌فرض (Home) -->
+            <ribbon:RibbonTab Header="Home">
+
+                <ribbon:RibbonGroup Header="File Options">
+                    <ribbon:RibbonButton Label="Open" Click="MenuItem_Open_Click" />
+                    <ribbon:RibbonButton Label="Save" Click="MenuItem_Save_Click" />
+                </ribbon:RibbonGroup>
+
+                <ribbon:RibbonGroup Header="Export">
+                    <ribbon:RibbonButton Label="PDF" Click="MenuItem_ExportPdf_Click" />
+                </ribbon:RibbonGroup>
+
+                <!-- این گروه را برای آینده قرار می‌دهیم تا دکمه‌های تراز کردن و فونت را اینجا بگذاریم -->
+                <ribbon:RibbonGroup Header="Formatting">
+                    <ribbon:RibbonButton Label="Left" />
+                    <ribbon:RibbonButton Label="Center" />
+                    <ribbon:RibbonButton Label="Right" />
+                </ribbon:RibbonGroup>
+
+            </ribbon:RibbonTab>
+
+            <!-- تب‌های اضافی برای آینده -->
+            <ribbon:RibbonTab Header="Insert">
+                <ribbon:RibbonGroup Header="Elements">
+                    <!-- بعداً می‌توانیم درگ و دراپ را به جای تولباکس، از اینجا هم مدیریت کنیم -->
+                    <ribbon:RibbonButton Label="Text Box" />
+                    <ribbon:RibbonButton Label="Image" />
+                </ribbon:RibbonGroup>
+            </ribbon:RibbonTab>
+        </ribbon:Ribbon>
+        <!-- پنل سمت چپ: Toolbox (اضافه شدن Grid.Row="1") -->
+        <Border Grid.Row="1" Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
             <StackPanel Margin="10">
                 <TextBlock Text="Toolbox" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
 
@@ -29,8 +88,8 @@
             </StackPanel>
         </Border>
 
-        <!-- پنل وسط: بوم طراحی (Canvas) -->
-        <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <!-- پنل وسط: بوم طراحی (Canvas) (اضافه شدن Grid.Row="1") -->
+        <ScrollViewer Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <!-- یک صفحه A4 فرضی در مرکز -->
                 <Border Background="White" Width="794" Height="1123" Margin="40" 
@@ -41,17 +100,35 @@
 
                     <!-- این Canvas جایی است که المان‌ها روی آن رها می‌شوند -->
                     <Canvas Name="DesignCanvas" Background="Transparent"
-                            AllowDrop="True" Drop="DesignCanvas_Drop"/>
+                            AllowDrop="True" Drop="DesignCanvas_Drop" MouseLeftButtonDown="DesignCanvas_MouseLeftButtonDown"/>
                 </Border>
             </Grid>
         </ScrollViewer>
 
         <!-- پنل سمت راست: تنظیمات -->
-        <Border Grid.Column="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1,0,0,0">
-            <StackPanel Margin="10">
+        <Border Grid.Row="1" Grid.Column="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1,0,0,0">
+            <StackPanel Margin="15">
                 <TextBlock Text="Properties" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
-                <TextBlock Text="Select an element to edit" Foreground="Gray"/>
-                <!-- بعداً کنترل Property Grid را اینجا اضافه می‌کنیم -->
+
+                <!-- این بخش زمانی که هیچ المانی انتخاب نشده دیده می‌شود -->
+                <TextBlock Name="txtNoSelection" Text="Select an element to edit" Foreground="Gray"/>
+
+                <!-- این پنل تنظیمات در ابتدا مخفی است -->
+                <StackPanel Name="pnlProperties" Visibility="Collapsed">
+
+                    <TextBlock Text="Text Content:" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtBoxContent" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtBoxContent_TextChanged"/>
+
+                    <TextBlock Text="Font Size:" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtBoxFontSize" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtBoxFontSize_TextChanged"/>
+
+                    <TextBlock Text="Hex Color (#RRGGBB):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtBoxColor" Height="30" Padding="5" Margin="0,0,0,15" TextChanged="txtBoxColor_TextChanged"/>
+
+                    <!-- فیلد اتصال به داده (Data Binding) برای مقادیر متغیر -->
+                    <TextBlock Text="Data Binding (JSON Path):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtBoxDataBinding" Height="30" Padding="5" Margin="0,0,0,10"/>
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>
