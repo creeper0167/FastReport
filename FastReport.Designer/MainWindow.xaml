@@ -6,7 +6,9 @@
         xmlns:local="clr-namespace:FastReport.Designer"
         xmlns:ribbon="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="FastReport Designer" 
+        Height="720" Width="1280"
+        Icon="/FastReportIcon.ico"
         WindowState="Maximized">
     <Grid Background="#F5F5F5">
         <!-- اضافه کردن ردیف‌ها برای جدا کردن منو از محیط طراحی -->

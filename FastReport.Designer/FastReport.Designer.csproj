@@ -9,12 +9,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="FastReportIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="QuestPDF" Version="2026.8.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FastReport.Domain\FastReport.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="FastReportIcon.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
