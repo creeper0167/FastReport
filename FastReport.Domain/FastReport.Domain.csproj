@@ -4,6 +4,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>Mohammad Amin Arjang</Authors>
+    <Description>A dynamic PDF report generation engine for .NET</Description>
+    <PackageId>FastReportEngine</PackageId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+  </ItemGroup>
 
 </Project>
