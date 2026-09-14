@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastReport - Modern .NET PDF Reporting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#1e40af',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm fixed w-full z-10 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <!-- Updated Logo -->
+                    <img src="FastReportIcon.png" alt="FastReport Logo" class="h-10 w-10 object-contain mr-3 rounded-md shadow-sm">
+                    <span class="font-bold text-xl text-gray-900">FastReport</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#features" class="text-gray-600 hover:text-primary transition">Features</a>
+                    <a href="#quickstart" class="text-gray-600 hover:text-primary transition">Quick Start</a>
+                    <a href="https://github.com/YOUR-USERNAME/FastReport" target="_blank" class="text-gray-600 hover:text-gray-900 text-2xl transition"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="pt-28 pb-16 bg-white overflow-hidden border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
+                Decoupled PDF Reporting for <span class="text-primary">.NET 8</span>
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500 leading-relaxed">
+                Separate your visual design from your backend logic. Design beautiful templates with a drag-and-drop WPF editor, and render them dynamically in any .NET application using JSON data.
+            </p>
+            <div class="mt-10 flex justify-center space-x-4">
+                <a href="https://github.com/YOUR-USERNAME/FastReport" target="_blank" class="bg-primary hover:bg-secondary text-white font-bold py-3 px-8 rounded-lg transition duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                    <i class="fab fa-github mr-2"></i> View on GitHub
+                </a>
+                <a href="#quickstart" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 px-8 rounded-lg transition duration-300">
+                    Get Started
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900">Why FastReport?</h2>
+                <p class="mt-4 text-lg text-gray-500">Built for performance, flexibility, and ease of use.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-blue-50 text-primary rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Visual Designer</h3>
+                    <p class="text-gray-600 leading-relaxed">A standalone WPF desktop application with drag-and-drop capabilities. Save templates as lightweight .frpt (JSON) files.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-green-50 text-green-600 rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Dynamic JSON Binding</h3>
+                    <p class="text-gray-600 leading-relaxed">Inject dynamic data into your reports instantly using double-brace template syntax like <code class="bg-gray-100 px-1 rounded">{{Customer.Name}}</code>.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Cross-Platform Engine</h3>
+                    <p class="text-gray-600 leading-relaxed">A pure .NET 8 library powered by QuestPDF. Run it in ASP.NET Core APIs, Worker Services, or Console apps on any OS.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Native RTL Support</h3>
+                    <p class="text-gray-600 leading-relaxed">Flawless rendering for right-to-left languages (Persian/Arabic) with proper text shaping and connected characters out of the box.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Integrated Charts</h3>
+                    <p class="text-gray-600 leading-relaxed">Native support for rendering Bar and Pie charts dynamically using ScottPlot based on JSON data arrays.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="w-14 h-14 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center text-2xl mb-6">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">No HTML Conversion</h3>
+                    <p class="text-gray-600 leading-relaxed">Forget browser dependencies like Puppeteer or WkHtmlToPdf. Generates optimized, vector-based PDFs natively.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Start Section -->
+    <div id="quickstart" class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-extrabold text-gray-900">How It Works</h2>
+                <p class="mt-4 text-lg text-gray-500">Generate professional reports in three simple steps.</p>
+            </div>
+            
+            <div class="space-y-10">
+                <div class="flex items-start">
+                    <div class="bg-primary text-white w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-lg mr-4 mt-1">1</div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-2">Design your template</h3>
+                        <p class="text-gray-600 mb-2">Open the FastReport WPF Designer, drag your text boxes and charts, bind them to JSON paths (e.g. <code class="bg-gray-100 px-2 py-1 rounded">{{Customer.FullName}}</code>), and save as <code>Invoice.frpt</code>.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="bg-primary text-white w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-lg mr-4 mt-1">2</div>
+                    <div class="w-full">
+                        <h3 class="text-2xl font-bold mb-3">Install the NuGet Package</h3>
+                        <div class="bg-[#2d2d2d] rounded-lg p-4 shadow-inner">
+                            <code class="text-green-400 font-mono text-sm">dotnet add package FastReportEngine</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start">
+                    <div class="bg-primary text-white w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-lg mr-4 mt-1">3</div>
+                    <div class="w-full">
+                        <h3 class="text-2xl font-bold mb-3">Generate PDF in C#</h3>
+                        <div class="rounded-lg overflow-hidden shadow-lg">
+<pre class="m-0"><code class="language-csharp">using FastReport.Domain;
+
+// 1. Prepare your dynamic data as a JSON string
+string customerDataJson = @"{
+    ""Customer"": { 
+        ""FullName"": ""علی رضایی"" 
+    },
+    ""TotalAmount"": ""5,400,000 تومان""
+}";
+
+// 2. Initialize the engine and generate the PDF
+var engine = new ReportEngine();
+
+engine.RenderPdf(
+    templateFilePath: "Invoice.frpt", 
+    jsonData: customerDataJson,
+    outputPdfPath: "FinalInvoice.pdf"
+);</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
+            <!-- Updated Logo -->
+            <img src="FastReportIcon.png" alt="FastReport Logo" class="h-20 w-20 mb-4 rounded-2xl shadow-lg border-2 border-gray-700 bg-white object-contain p-1">
+            <p class="text-2xl font-bold mb-2">FastReport</p>
+            <p class="text-gray-400 mb-6">Open-source PDF generation engine for the .NET ecosystem.</p>
+            <div class="flex space-x-6">
+                <a href="https://github.com/YOUR-USERNAME/FastReport" target="_blank" class="text-gray-400 hover:text-white transition"><i class="fab fa-github text-3xl"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin text-3xl"></i></a>
+            </div>
+            <p class="text-gray-500 mt-8 text-sm">Released under the MIT License.</p>
+        </div>
+    </footer>
+
+    <!-- Syntax Highlighting Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+</body>
+</html>
