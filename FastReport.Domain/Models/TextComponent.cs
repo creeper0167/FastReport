@@ -12,5 +12,8 @@ namespace FastReport.Domain.Models
         public string FontFamily { get; set; } = "Arial";
         public int FontSize { get; set; } = 12;
         public string HexColor { get; set; } = "#000000";
+
+        // این خط باید اضافه شود:
+        public string TextAlignment { get; set; } = "Center";
     }
 }

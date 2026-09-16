@@ -1,17 +1,15 @@
 ﻿<Window x:Class="FastReport.Designer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:FastReport.Designer"
         xmlns:ribbon="clr-namespace:System.Windows.Controls.Ribbon;assembly=System.Windows.Controls.Ribbon"
-        mc:Ignorable="d"
+        xmlns:local="clr-namespace:FastReport.Designer" 
         Title="FastReport Designer" 
         Height="720" Width="1280"
         Icon="/FastReportIcon.ico"
+        PreviewKeyDown="Window_PreviewKeyDown"
         WindowState="Maximized">
+    
     <Grid Background="#F5F5F5">
-        <!-- اضافه کردن ردیف‌ها برای جدا کردن منو از محیط طراحی -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -21,25 +19,13 @@
             <ColumnDefinition Width="250"/>
             <!-- Toolbox -->
             <ColumnDefinition Width="*"/>
-            <!-- Canvas/Designer -->
+            <!-- Canvas -->
             <ColumnDefinition Width="300"/>
             <!-- Properties -->
         </Grid.ColumnDefinitions>
 
-        <!-- منوی بالای صفحه (ردیف 0، کشیده شده روی تمام 3 ستون) -->
-        <Menu Grid.Row="0" Grid.ColumnSpan="3" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="5,2">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Open Report" Click="MenuItem_Open_Click"/>
-                <MenuItem Header="_Save Report" Click="MenuItem_Save_Click"/>
-                <Separator/>
-                <!-- یک خط جداکننده -->
-                <MenuItem Header="Export to _PDF" Click="MenuItem_ExportPdf_Click"/>
-            </MenuItem>
-        </Menu>
-        <!-- جایگزین کردن بخش Menu با Ribbon -->
+        <!-- منوی Ribbon -->
         <ribbon:Ribbon Grid.Row="0" Grid.ColumnSpan="3" Background="#F3F3F3" BorderBrush="#D4D4D4">
-
-            <!-- دکمه اصلی File در گوشه سمت چپ بالا -->
             <ribbon:Ribbon.ApplicationMenu>
                 <ribbon:RibbonApplicationMenu>
                     <ribbon:RibbonApplicationMenuItem Header="Open Report..." Click="MenuItem_Open_Click"/>
@@ -48,9 +34,7 @@
                 </ribbon:RibbonApplicationMenu>
             </ribbon:Ribbon.ApplicationMenu>
 
-            <!-- تب پیش‌فرض (Home) -->
             <ribbon:RibbonTab Header="Home">
-
                 <ribbon:RibbonGroup Header="File Options">
                     <ribbon:RibbonButton Label="Open" Click="MenuItem_Open_Click" />
                     <ribbon:RibbonButton Label="Save" Click="MenuItem_Save_Click" />
@@ -59,50 +43,83 @@
                 <ribbon:RibbonGroup Header="Export">
                     <ribbon:RibbonButton Label="PDF" Click="MenuItem_ExportPdf_Click" />
                 </ribbon:RibbonGroup>
-
-                <!-- این گروه را برای آینده قرار می‌دهیم تا دکمه‌های تراز کردن و فونت را اینجا بگذاریم -->
-                <ribbon:RibbonGroup Header="Formatting">
-                    <ribbon:RibbonButton Label="Left" />
-                    <ribbon:RibbonButton Label="Center" />
-                    <ribbon:RibbonButton Label="Right" />
-                </ribbon:RibbonGroup>
-
             </ribbon:RibbonTab>
 
-            <!-- تب‌های اضافی برای آینده -->
             <ribbon:RibbonTab Header="Insert">
                 <ribbon:RibbonGroup Header="Elements">
-                    <!-- بعداً می‌توانیم درگ و دراپ را به جای تولباکس، از اینجا هم مدیریت کنیم -->
                     <ribbon:RibbonButton Label="Text Box" />
                     <ribbon:RibbonButton Label="Image" />
+                    <ribbon:RibbonButton Label="Chart" Click="RibbonButton_AddChart_Click" Background="#E3F2FD"/>
                 </ribbon:RibbonGroup>
             </ribbon:RibbonTab>
         </ribbon:Ribbon>
-        <!-- پنل سمت چپ: Toolbox (اضافه شدن Grid.Row="1") -->
+
+        <!-- پنل سمت چپ: Toolbox -->
         <Border Grid.Row="1" Grid.Column="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
             <StackPanel Margin="10">
                 <TextBlock Text="Toolbox" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
 
-                <!-- این دکمه را بعداً قابل درگ می‌کنیم -->
                 <Button Name="btnDragText" Content="Text Box" Height="35" Margin="0,0,0,10" Background="#E3F2FD" Cursor="Hand"
                         PreviewMouseLeftButtonDown="btnDragText_PreviewMouseLeftButtonDown"/>
+
                 <Button Name="btnDragImage" Content="Image" Height="35" Margin="0,0,0,10" Background="#E3F2FD" Cursor="Hand"/>
+
+                <Button Name="btnDragChart" Content="Chart" Height="35" Margin="0,0,0,10" Background="#E3F2FD" Cursor="Hand"
+                        PreviewMouseLeftButtonDown="btnDragChart_PreviewMouseLeftButtonDown"/>
             </StackPanel>
         </Border>
 
-        <!-- پنل وسط: بوم طراحی (Canvas) (اضافه شدن Grid.Row="1") -->
-        <ScrollViewer Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid>
-                <!-- یک صفحه A4 فرضی در مرکز -->
-                <Border Background="White" Width="794" Height="1123" Margin="40" 
-                        VerticalAlignment="Top" HorizontalAlignment="Center">
+        <!-- پنل وسط: بوم طراحی به همراه خط‌کش‌ها -->
+        <ScrollViewer Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Background="#E0E0E0">
+            <!-- این گرید جدید، صفحه و خط‌کش‌ها را یکپارچه می‌کند -->
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="40">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <!-- ارتفاع خط‌کش افقی -->
+                    <RowDefinition Height="1123"/>
+                    <!-- ارتفاع صفحه A4 -->
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <!-- عرض خط‌کش عمودی -->
+                    <ColumnDefinition Width="794"/>
+                    <!-- عرض صفحه A4 -->
+                </Grid.ColumnDefinitions>
+
+                <!-- مربع تقاطع دو خط‌کش (گوشه بالا سمت چپ) -->
+                <Border Grid.Row="0" Grid.Column="0" Background="WhiteSmoke" BorderBrush="DarkGray" BorderThickness="0,0,1,1"/>
+
+                <!-- خط‌کش افقی -->
+                <local:Ruler Grid.Row="0" Grid.Column="1" Orientation="Horizontal"/>
+
+                <!-- خط‌کش عمودی -->
+                <local:Ruler Grid.Row="1" Grid.Column="0" Orientation="Vertical"/>
+
+                <!-- صفحه A4 در مرکز -->
+                <Border Grid.Row="1" Grid.Column="1" Background="White" BorderBrush="DarkGray" BorderThickness="0,0,1,1">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Opacity="0.2" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <!-- این Canvas جایی است که المان‌ها روی آن رها می‌شوند -->
-                    <Canvas Name="DesignCanvas" Background="Transparent"
-                            AllowDrop="True" Drop="DesignCanvas_Drop" MouseLeftButtonDown="DesignCanvas_MouseLeftButtonDown"/>
+                    <Canvas Name="DesignCanvas" 
+        AllowDrop="True" Drop="DesignCanvas_Drop" MouseLeftButtonDown="DesignCanvas_MouseLeftButtonDown">
+                        <!-- رسم خطوط شطرنجی پس‌زمینه با فاصله 10 پیکسل -->
+                        <Canvas.Background>
+                            <DrawingBrush TileMode="Tile" Viewport="0,0,10,10" ViewportUnits="Absolute">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Geometry>
+                                            <RectangleGeometry Rect="0,0,10,10"/>
+                                        </GeometryDrawing.Geometry>
+                                        <GeometryDrawing.Pen>
+                                            <!-- رنگ خطوط شطرنجی (خاکستری بسیار روشن) -->
+                                            <Pen Brush="#EBEBEB" Thickness="1"/>
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Canvas.Background>
+                    </Canvas>
                 </Border>
             </Grid>
         </ScrollViewer>
@@ -112,12 +129,10 @@
             <StackPanel Margin="15">
                 <TextBlock Text="Properties" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
 
-                <!-- این بخش زمانی که هیچ المانی انتخاب نشده دیده می‌شود -->
                 <TextBlock Name="txtNoSelection" Text="Select an element to edit" Foreground="Gray"/>
 
-                <!-- این پنل تنظیمات در ابتدا مخفی است -->
-                <StackPanel Name="pnlProperties" Visibility="Collapsed">
-
+                <!-- تنظیمات متنی -->
+                <StackPanel Name="pnlTextProperties" Visibility="Collapsed">
                     <TextBlock Text="Text Content:" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
                     <TextBox Name="txtBoxContent" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtBoxContent_TextChanged"/>
 
@@ -127,9 +142,26 @@
                     <TextBlock Text="Hex Color (#RRGGBB):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
                     <TextBox Name="txtBoxColor" Height="30" Padding="5" Margin="0,0,0,15" TextChanged="txtBoxColor_TextChanged"/>
 
-                    <!-- فیلد اتصال به داده (Data Binding) برای مقادیر متغیر -->
                     <TextBlock Text="Data Binding (JSON Path):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
                     <TextBox Name="txtBoxDataBinding" Height="30" Padding="5" Margin="0,0,0,10"/>
+                </StackPanel>
+
+                <!-- تنظیمات نمودار -->
+                <StackPanel Name="pnlChartProperties" Visibility="Collapsed">
+                    <TextBlock Text="Chart Type:" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <ComboBox Name="cmbChartType" Height="30" Margin="0,0,0,10" SelectionChanged="cmbChartType_SelectionChanged">
+                        <ComboBoxItem Content="Bar"/>
+                        <ComboBoxItem Content="Pie"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Array Path (e.g. SalesData):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtChartDataPath" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtChartDataPath_TextChanged"/>
+
+                    <TextBlock Text="X-Axis Field (e.g. Month):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtChartXAxis" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtChartXAxis_TextChanged"/>
+
+                    <TextBlock Text="Y-Axis Field (e.g. Amount):" FontSize="12" Foreground="DarkSlateGray" Margin="0,0,0,5"/>
+                    <TextBox Name="txtChartYAxis" Height="30" Padding="5" Margin="0,0,0,10" TextChanged="txtChartYAxis_TextChanged"/>
                 </StackPanel>
             </StackPanel>
         </Border>

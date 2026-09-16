@@ -33,6 +33,8 @@ namespace FastReport.Designer
         private UIElement _selectedElement = null;
         private Border _activeElement = null; // المانی که در حال حاضر انتخاب شده است
         private bool _isUpdatingUI = false; // جلوگیری از تداخل رویدادها
+                                            // اندازه خانه‌های شبکه (10 پیکسل)
+        private const double GridSize = 10.0;
         public MainWindow()
         {
             InitializeComponent();
@@ -43,47 +45,96 @@ namespace FastReport.Designer
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         }
-        
+
+        private double SnapToGrid(double value)
+        {
+            return Math.Round(value / GridSize) * GridSize;
+        }
+        private void Element_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (_isDragging && _selectedElement != null)
+            {
+                Point currentPosition = e.GetPosition(DesignCanvas);
+
+                // محاسبه مختصات جدید و اعمال Snap
+                double newX = SnapToGrid(currentPosition.X - _clickPosition.X);
+                double newY = SnapToGrid(currentPosition.Y - _clickPosition.Y);
+
+                // جلوگیری از خروج المان از سمت چپ و بالای بوم
+                newX = Math.Max(0, newX);
+                newY = Math.Max(0, newY);
+
+                Canvas.SetLeft(_selectedElement, newX);
+                Canvas.SetTop(_selectedElement, newY);
+
+                // ذخیره مختصات جدید در مدل داده‌ها
+                if (_selectedElement is FrameworkElement element && element.Tag is ReportComponent model)
+                {
+                    model.X = newX;
+                    model.Y = newY;
+                }
+            }
+        }
+        private void RemoveSelectionHandles()
+        {
+            if (_activeElement != null)
+            {
+                var layer = AdornerLayer.GetAdornerLayer(_activeElement);
+                if (layer != null)
+                {
+                    var adorners = layer.GetAdorners(_activeElement);
+                    if (adorners != null)
+                    {
+                        foreach (var adorner in adorners)
+                        {
+                            layer.Remove(adorner);
+                        }
+                    }
+                }
+            }
+        }
+
         // 1. شروع عملیات Drag از Toolbox
         private void btnDragText_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // یک سیگنال متنی به نام TextComponent ارسال می‌کنیم تا Canvas بفهمد چه چیزی در حال کشیده شدن است
-            DragDrop.DoDragDrop(btnDragText, "TextComponent", DragDropEffects.Copy);
+            DragDrop.DoDragDrop((DependencyObject)sender, "Text Box", DragDropEffects.Copy);
         }
         // 2. عملیات Drop روی بوم طراحی
         private void DesignCanvas_Drop(object sender, DragEventArgs e)
         {
-            // بررسی می‌کنیم که آیا چیزی که رها شده، همان سیگنال متنی ماست؟
             if (e.Data.GetDataPresent(DataFormats.StringFormat))
             {
-                string componentType = (string)e.Data.GetData(DataFormats.StringFormat);
+                string toolName = (string)e.Data.GetData(DataFormats.StringFormat);
+                Point dropPosition = e.GetPosition(DesignCanvas);
 
-                if (componentType == "TextComponent")
+                if (toolName == "Text Box")
                 {
-                    // گرفتن مختصات دقیق موس روی Canvas
-                    Point dropPosition = e.GetPosition(DesignCanvas);
-
-                    // بخش اول: ساخت مدل داده‌ای (Domain)
+                    // ۱. ساخت مدل داده‌ای متن در نقطه‌ی رها شدن موس
                     var textModel = new TextComponent
                     {
-                        X = dropPosition.X,
-                        Y = dropPosition.Y,
-                        Width = 150,
+                        X = SnapToGrid(dropPosition.X), // اعمال Snap
+                        Y = SnapToGrid(dropPosition.Y), // اعمال Snap
+                        Width = 200,
                         Height = 40,
-                        Text = "Sample Text"
+                        Text = "متن نمونه",
+                        FontSize = 14,
+                        HexColor = "#000000",
+                        FontFamily = "Arial"
                     };
-                    _reportComponents.Add(textModel); // اضافه کردن به حافظه برای ذخیره نهایی
 
-                    // بخش دوم: ساخت عنصر گرافیکی (UI) برای نمایش به کاربر
-                    Border visualElement = new Border
+                    _reportComponents.Add(textModel);
+
+                    // ۲. ساخت ظاهر گرافیکی متن روی بوم
+                    Border textVisual = new Border
                     {
                         Width = textModel.Width,
                         Height = textModel.Height,
                         Background = Brushes.White,
                         BorderBrush = Brushes.Gray,
-                        BorderThickness = new Thickness(1, 1, 1, 1),
-                        Cursor = Cursors.SizeAll, // تغییر شکل موس برای نشان دادن قابلیت جابجایی
-                        Tag = textModel
+                        BorderThickness = new Thickness(1),
+                        Cursor = Cursors.SizeAll,
+                        Tag = textModel // اتصال مدل داده‌ای به ظاهر گرافیکی
                     };
 
                     TextBlock textBlock = new TextBlock
@@ -95,18 +146,63 @@ namespace FastReport.Designer
                         FontSize = textModel.FontSize
                     };
 
-                    visualElement.Child = textBlock;
+                    textVisual.Child = textBlock;
 
-                    // قرار دادن عنصر گرافیکی در مختصاتی که موس رها شده است
-                    Canvas.SetLeft(visualElement, textModel.X);
-                    Canvas.SetTop(visualElement, textModel.Y);
+                    // ۳. قرار دادن در مختصات موس
+                    Canvas.SetLeft(textVisual, textModel.X);
+                    Canvas.SetTop(textVisual, textModel.Y);
 
-                    // اضافه کردن رویدادهای جابجایی به المان
-                    visualElement.MouseLeftButtonDown += Element_MouseLeftButtonDown;
-                    visualElement.MouseMove += Element_MouseMove;
-                    visualElement.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+                    // ۴. اتصال رویدادها (انتخاب، تغییر سایز، جابجایی)
+                    textVisual.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+                    textVisual.MouseMove += Element_MouseMove;
+                    textVisual.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
-                    DesignCanvas.Children.Add(visualElement);
+                    // ۵. اضافه کردن به بوم
+                    DesignCanvas.Children.Add(textVisual);
+                }
+                else if (toolName == "Chart")
+                {
+                    var chartModel = new ChartComponent
+                    {
+                        X = SnapToGrid(dropPosition.X), // اعمال Snap
+                        Y = SnapToGrid(dropPosition.Y), // اعمال Snap
+                        Width = 300,
+                        Height = 200,
+                        ChartType = "Bar"
+                    };
+
+                    _reportComponents.Add(chartModel);
+
+                    Border chartVisual = new Border
+                    {
+                        Width = chartModel.Width,
+                        Height = chartModel.Height,
+                        Background = Brushes.AliceBlue,
+                        BorderBrush = Brushes.CornflowerBlue,
+                        BorderThickness = new Thickness(2),
+                        Cursor = Cursors.SizeAll,
+                        Tag = chartModel
+                    };
+
+                    TextBlock label = new TextBlock
+                    {
+                        Text = "📊 Chart Area",
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                        Foreground = Brushes.CornflowerBlue,
+                        FontWeight = FontWeights.Bold
+                    };
+
+                    chartVisual.Child = label;
+
+                    Canvas.SetLeft(chartVisual, chartModel.X);
+                    Canvas.SetTop(chartVisual, chartModel.Y);
+
+                    chartVisual.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+                    chartVisual.MouseMove += Element_MouseMove;
+                    chartVisual.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+
+                    DesignCanvas.Children.Add(chartVisual);
                 }
             }
         }
@@ -114,6 +210,8 @@ namespace FastReport.Designer
         // ۱. زمانی که کاربر روی المان کلیک می‌کند تا جابجایی را شروع کند
         private void Element_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            RemoveSelectionHandles();
+
             _selectedElement = sender as UIElement;
             _isDragging = true;
 
@@ -122,61 +220,51 @@ namespace FastReport.Designer
                 _clickPosition = e.GetPosition(_selectedElement);
                 _selectedElement.CaptureMouse();
 
-                // بررسی می‌کنیم که آیا المان کلیک شده یک Border است و آیا Tag آن از نوع TextComponent است
-                if (_selectedElement is Border border && border.Tag is TextComponent model)
+                if (_selectedElement is Border border)
                 {
                     _activeElement = border;
 
-                    // مخفی کردن متن راهنما و نمایش پنل تنظیمات
-                    txtNoSelection.Visibility = Visibility.Collapsed;
-                    pnlProperties.Visibility = Visibility.Visible;
+                    var layer = AdornerLayer.GetAdornerLayer(_activeElement);
+                    if (layer != null)
+                    {
+                        layer.Add(new ResizingAdorner(_activeElement));
+                    }
 
-                    // روشن کردن قفل برای جلوگیری از اجرای حلقه TextChanged
+                    // ابتدا همه پنل‌ها را مخفی می‌کنیم
+                    txtNoSelection.Visibility = Visibility.Collapsed;
+                    pnlTextProperties.Visibility = Visibility.Collapsed;
+                    pnlChartProperties.Visibility = Visibility.Collapsed;
+
                     _isUpdatingUI = true;
 
-                    // پر کردن فیلدها با اطلاعات مدل
-                    txtBoxContent.Text = model.Text;
-                    txtBoxFontSize.Text = model.FontSize.ToString();
-                    txtBoxColor.Text = model.HexColor;
-                    txtBoxDataBinding.Text = model.DataBindingPath;
+                    // اگر المان متنی بود:
+                    if (border.Tag is TextComponent textModel)
+                    {
+                        pnlTextProperties.Visibility = Visibility.Visible;
 
-                    // باز کردن قفل
+                        txtBoxContent.Text = textModel.Text;
+                        txtBoxFontSize.Text = textModel.FontSize.ToString();
+                        txtBoxColor.Text = textModel.HexColor;
+                        txtBoxDataBinding.Text = textModel.DataBindingPath;
+                    }
+                    // اگر المان نمودار بود:
+                    else if (border.Tag is ChartComponent chartModel)
+                    {
+                        pnlChartProperties.Visibility = Visibility.Visible;
+
+                        cmbChartType.Text = chartModel.ChartType;
+                        txtChartDataPath.Text = chartModel.DataBindingPath;
+                        txtChartXAxis.Text = chartModel.XAxisField;
+                        txtChartYAxis.Text = chartModel.YAxisField;
+                    }
+
                     _isUpdatingUI = false;
                 }
-                else
-                {
-                    // اگر این پیام را دیدید، یعنی ارتباط بین گرافیک و کلاس Model قطع شده است
-                    MessageBox.Show("Element selected, but it is not a valid TextComponent!");
-                }
             }
 
-            // جلوگیری از انتقال کلیک به پس‌زمینه
             e.Handled = true;
         }
-        // ۲. زمانی که کاربر موس را حرکت می‌دهد
-        private void Element_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (_isDragging && _selectedElement != null)
-            {
-                // گرفتن موقعیت فعلی موس نسبت به بوم طراحی
-                Point mousePos = e.GetPosition(DesignCanvas);
-
-                // محاسبه مختصات جدید (موقعیت موس منهای فاصله‌ای که از گوشه المان کلیک شده بود)
-                double newLeft = mousePos.X - _clickPosition.X;
-                double newTop = mousePos.Y - _clickPosition.Y;
-
-                // اعمال مختصات جدید به المان گرافیکی
-                Canvas.SetLeft(_selectedElement, newLeft);
-                Canvas.SetTop(_selectedElement, newTop);
-
-                // بروزرسانی مختصات در مدل داده‌ای (Domain Model)
-                if (_selectedElement is FrameworkElement fe && fe.Tag is ReportComponent model)
-                {
-                    model.X = newLeft;
-                    model.Y = newTop;
-                }
-            }
-        }
+        
 
         // ۳. زمانی که کاربر کلیک را رها می‌کند
         private void Element_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -292,8 +380,9 @@ namespace FastReport.Designer
                         _reportComponents.Clear();
                         DesignCanvas.Children.Clear();
 
-                        // ۲. مخفی کردن پنل تنظیمات
-                        pnlProperties.Visibility = Visibility.Collapsed;
+                        // ۲. مخفی کردن پنل‌های تنظیمات جدید
+                        pnlTextProperties.Visibility = Visibility.Collapsed;
+                        pnlChartProperties.Visibility = Visibility.Collapsed;
                         txtNoSelection.Visibility = Visibility.Visible;
                         _activeElement = null;
 
@@ -316,7 +405,6 @@ namespace FastReport.Designer
                                     Tag = textModel // اتصال مجدد مدل داده‌ای
                                 };
 
-                                // بازسازی متن
                                 TextBlock textBlock = new TextBlock
                                 {
                                     Text = textModel.Text,
@@ -326,7 +414,6 @@ namespace FastReport.Designer
                                     FontSize = textModel.FontSize
                                 };
 
-                                // تلاش برای اعمال رنگ قبلی
                                 try
                                 {
                                     textBlock.Foreground = (Brush)new BrushConverter().ConvertFromString(textModel.HexColor);
@@ -335,16 +422,48 @@ namespace FastReport.Designer
 
                                 visualElement.Child = textBlock;
 
-                                // تنظیم مختصات ذخیره شده
                                 Canvas.SetLeft(visualElement, textModel.X);
                                 Canvas.SetTop(visualElement, textModel.Y);
 
-                                // متصل کردن مجدد رویدادهای موس تا دوباره قابل جابجایی و کلیک باشند
                                 visualElement.MouseLeftButtonDown += Element_MouseLeftButtonDown;
                                 visualElement.MouseMove += Element_MouseMove;
                                 visualElement.MouseLeftButtonUp += Element_MouseLeftButtonUp;
 
                                 DesignCanvas.Children.Add(visualElement);
+                            }
+                            else if (component is ChartComponent chartModel)
+                            {
+                                // بازسازی بخش نمودار روی بوم
+                                Border chartVisual = new Border
+                                {
+                                    Width = chartModel.Width,
+                                    Height = chartModel.Height,
+                                    Background = Brushes.AliceBlue,
+                                    BorderBrush = Brushes.CornflowerBlue,
+                                    BorderThickness = new Thickness(2),
+                                    Cursor = Cursors.SizeAll,
+                                    Tag = chartModel
+                                };
+
+                                TextBlock label = new TextBlock
+                                {
+                                    Text = "📊 Chart Area",
+                                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                                    VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                                    Foreground = Brushes.CornflowerBlue,
+                                    FontWeight = FontWeights.Bold
+                                };
+
+                                chartVisual.Child = label;
+
+                                Canvas.SetLeft(chartVisual, chartModel.X);
+                                Canvas.SetTop(chartVisual, chartModel.Y);
+
+                                chartVisual.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+                                chartVisual.MouseMove += Element_MouseMove;
+                                chartVisual.MouseLeftButtonUp += Element_MouseLeftButtonUp;
+
+                                DesignCanvas.Children.Add(chartVisual);
                             }
                         }
                     }
@@ -360,8 +479,11 @@ namespace FastReport.Designer
             // اگر کاربر مستقیماً روی فضای خالی بوم کلیک کرد
             if (e.OriginalSource == DesignCanvas)
             {
+                RemoveSelectionHandles();
+
                 _activeElement = null;
-                pnlProperties.Visibility = Visibility.Collapsed;
+                pnlTextProperties.Visibility = Visibility.Collapsed;
+                pnlChartProperties.Visibility = Visibility.Collapsed;
                 txtNoSelection.Visibility = Visibility.Visible;
             }
         }
@@ -376,6 +498,9 @@ namespace FastReport.Designer
             {
                 try
                 {
+                    // ضریب تبدیل پیکسل‌های WPF (96 DPI) به پوینت‌های PDF (72 DPI)
+                    const float scale = 0.75f;
+
                     // تولید سند PDF با استفاده از QuestPDF
                     Document.Create(container =>
                     {
@@ -389,7 +514,7 @@ namespace FastReport.Designer
                             // استفاده از Layers برای پیاده‌سازی سیستم مختصات مطلق (Absolute Positioning)
                             page.Content().Layers(layers =>
                             {
-                                // حل خطا: ایجاد یک لایه اصلی و نامرئی به ابعاد صفحه A4 تا بوم ما شکل بگیرد
+                                // ایجاد یک لایه اصلی و نامرئی به ابعاد صفحه A4 تا بوم ما شکل بگیرد
                                 layers.PrimaryLayer().Width(PageSizes.A4.Width).Height(PageSizes.A4.Height);
 
                                 // رسم المان‌های گزارش روی لایه‌های رویی
@@ -398,32 +523,153 @@ namespace FastReport.Designer
                                     if (component is TextComponent textModel)
                                     {
                                         layers.Layer()
-                                            .TranslateX((float)textModel.X)
-                                            .TranslateY((float)textModel.Y)
-                                            .Width((float)textModel.Width)
-                                            .Height((float)textModel.Height)
+                                            .TranslateX((float)(textModel.X * scale))     // اعمال ضریب
+                                            .TranslateY((float)(textModel.Y * scale))     // اعمال ضریب
+                                            .Width((float)(textModel.Width * scale))      // اعمال ضریب
+                                            .Height((float)(textModel.Height * scale))    // اعمال ضریب
                                             .Text(text =>
                                             {
-                                                text.AlignRight();
+                                                // اعمال تراز متن بر اساس انتخاب کاربر (اگر در مرحله قبل اضافه کردید)
+                                                if (textModel.TextAlignment == "Left") text.AlignLeft();
+                                                else if (textModel.TextAlignment == "Right") text.AlignRight();
+                                                else text.AlignCenter();
 
                                                 text.Span(textModel.Text)
                                                     .FontFamily(textModel.FontFamily)
-                                                    .FontSize((float)textModel.FontSize)
+                                                    .FontSize((float)(textModel.FontSize * scale)) // اعمال ضریب به سایز فونت
                                                     .FontColor(textModel.HexColor)
                                                     .DirectionFromRightToLeft();
                                             });
                                     }
+                                    // بخش مربوط به Chart را هم اگر در این خروجی دارید، باید مقادیرش را ضرب در scale کنید
                                 }
                             });
                         });
                     })
                     .GeneratePdf(saveFileDialog.FileName); // خروجی گرفتن و ذخیره فایل
 
-                    MessageBox.Show("PDF exported successfully with QuestPDF!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("PDF exported successfully with exact coordinates!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error exporting PDF: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        private void RibbonButton_AddChart_Click(object sender, RoutedEventArgs e)
+        {
+            var chartModel = new ChartComponent
+            {
+                X = 50,
+                Y = 50,
+                Width = 300,
+                Height = 200,
+                ChartType = "Bar"
+            };
+            _reportComponents.Add(chartModel);
+
+            // ساخت یک ظاهر بصری (پیش‌نمایش) برای نمودار روی بوم طراح
+            Border chartVisual = new Border
+            {
+                Width = chartModel.Width,
+                Height = chartModel.Height,
+                Background = Brushes.AliceBlue,
+                BorderBrush = Brushes.CornflowerBlue,
+                BorderThickness = new Thickness(2),
+                Cursor = Cursors.SizeAll,
+                Tag = chartModel // اتصال به مدل
+            };
+
+            TextBlock label = new TextBlock
+            {
+                Text = "📊 Chart Area",
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                Foreground = Brushes.CornflowerBlue,
+                FontWeight = FontWeights.Bold
+            };
+
+            chartVisual.Child = label;
+
+            // اتصال رویداد کلیک برای انتخاب المان (مثل تکست‌باکس‌ها)
+            chartVisual.MouseLeftButtonDown += Element_MouseLeftButtonDown;
+
+            Canvas.SetLeft(chartVisual, chartModel.X);
+            Canvas.SetTop(chartVisual, chartModel.Y);
+            DesignCanvas.Children.Add(chartVisual);
+        }
+        private void cmbChartType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingUI || _activeElement == null) return;
+
+            if (_activeElement.Tag is ChartComponent chartModel && cmbChartType.SelectedItem is ComboBoxItem item)
+            {
+                chartModel.ChartType = item.Content.ToString();
+            }
+        }
+
+        private void txtChartDataPath_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isUpdatingUI || _activeElement == null) return;
+
+            if (_activeElement.Tag is ChartComponent chartModel)
+            {
+                chartModel.DataBindingPath = txtChartDataPath.Text;
+            }
+        }
+
+        private void txtChartXAxis_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isUpdatingUI || _activeElement == null) return;
+
+            if (_activeElement.Tag is ChartComponent chartModel)
+            {
+                chartModel.XAxisField = txtChartXAxis.Text;
+            }
+        }
+
+        private void txtChartYAxis_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isUpdatingUI || _activeElement == null) return;
+
+            if (_activeElement.Tag is ChartComponent chartModel)
+            {
+                chartModel.YAxisField = txtChartYAxis.Text;
+            }
+        }
+        private void btnDragChart_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // ارسال رشته "Chart" هنگام کشیدن موس برای ساخته شدن نمودار روی بوم
+            DragDrop.DoDragDrop((DependencyObject)sender, "Chart", DragDropEffects.Copy);
+        }
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // بررسی فشرده شدن کلید Delete
+            if (e.Key == Key.Delete)
+            {
+                // جلوگیری از تداخل: اگر کاربر در حال تایپ یا پاک کردن متن در پنل تنظیمات است، عملیات متوقف شود
+                if (e.OriginalSource is TextBox) return;
+
+                // اگر المانی روی بوم انتخاب شده است
+                if (_activeElement != null)
+                {
+                    // ۱. پاک کردن دستگیره‌های تغییر سایز
+                    RemoveSelectionHandles();
+
+                    // ۲. پیدا کردن مدل مربوطه و حذف آن از لیست حافظه (تا در خروجی PDF و Save نیاید)
+                    if (_activeElement.Tag is ReportComponent model)
+                    {
+                        _reportComponents.Remove(model);
+                    }
+
+                    // ۳. حذف ظاهر گرافیکی المان از روی بوم
+                    DesignCanvas.Children.Remove(_activeElement);
+
+                    // ۴. پاک‌سازی وضعیت انتخاب و مخفی کردن پنل‌های تنظیمات
+                    _activeElement = null;
+                    pnlTextProperties.Visibility = Visibility.Collapsed;
+                    pnlChartProperties.Visibility = Visibility.Collapsed;
+                    txtNoSelection.Visibility = Visibility.Visible;
                 }
             }
         }

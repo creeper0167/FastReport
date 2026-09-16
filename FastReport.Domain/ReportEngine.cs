@@ -66,6 +66,84 @@ namespace FastReport.Domain
                                             .DirectionFromRightToLeft();
                                     });
                             }
+                            else if (component is ChartComponent chartModel)
+                            {
+                                // ۱. استخراج داده‌های آرایه‌ای از JSON (برای رسم نمودار به یک لیست نیاز داریم)
+                                List<double> values = new List<double>();
+                                List<string> labels = new List<string>();
+
+                                try
+                                {
+                                    // پیمایش مسیر متغیر در JSON تا رسیدن به آرایه هدف
+                                    JsonElement arrayElement = jsonRoot;
+                                    if (!string.IsNullOrEmpty(chartModel.DataBindingPath))
+                                    {
+                                        foreach (var part in chartModel.DataBindingPath.Split('.'))
+                                        {
+                                            arrayElement = arrayElement.GetProperty(part);
+                                        }
+                                    }
+
+                                    // اگر یک آرایه معتبر در JSON یافت شد، مقادیر آن را می‌خوانیم
+                                    if (arrayElement.ValueKind == JsonValueKind.Array)
+                                    {
+                                        foreach (var item in arrayElement.EnumerateArray())
+                                        {
+                                            // خواندن لیبل‌ها (مثلاً نام ماه‌ها)
+                                            if (item.TryGetProperty(chartModel.XAxisField ?? "Label", out var xProp))
+                                                labels.Add(xProp.ToString());
+
+                                            // خواندن مقادیر عددی
+                                            if (item.TryGetProperty(chartModel.YAxisField ?? "Value", out var yProp) &&
+                                                double.TryParse(yProp.ToString(), out double val))
+                                                values.Add(val);
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // در صورت عدم وجود دیتا، یک نمودار نمونه و خالی کشیده می‌شود
+                                    values = new List<double> { 10, 20, 15 };
+                                    labels = new List<string> { "No", "Data", "Found" };
+                                }
+
+                                // ۲. تولید عکس نمودار در حافظه با استفاده از ScottPlot
+                                var plot = new ScottPlot.Plot();
+
+                                if (chartModel.ChartType == "Bar")
+                                {
+                                    var barPlot = plot.Add.Bars(values.ToArray());
+
+                                    // ۱. تولید یک آرایه عددی برای موقعیت قرارگیری لیبل‌ها (0, 1, 2, ...)
+                                    double[] tickPositions = new double[labels.Count];
+                                    for (int i = 0; i < labels.Count; i++)
+                                    {
+                                        tickPositions[i] = i;
+                                    }
+
+                                    // ۲. ارسال هر دو پارامتر (موقعیت‌ها و متن‌ها) به محور افقی
+                                    plot.Axes.Bottom.SetTicks(tickPositions, labels.ToArray());
+                                }
+                                else if (chartModel.ChartType == "Pie")
+                                {
+                                    plot.Add.Pie(values.ToArray());
+                                }
+
+                                // پنهان کردن خطوط گرید برای زیبایی بیشتر در گزارش
+                                plot.HideGrid();
+                                plot.FigureBackground.Color = ScottPlot.Color.FromHex("#FFFFFF");
+
+                                // گرفتن خروجی عکس از نمودار با ابعاد مشخص شده در طراحی
+                                byte[] chartImage = plot.GetImageBytes((int)chartModel.Width, (int)chartModel.Height, ScottPlot.ImageFormat.Png);
+
+                                // ۳. قرار دادن عکس نمودار در لایه QuestPDF
+                                layers.Layer()
+                                    .TranslateX((float)chartModel.X)
+                                    .TranslateY((float)chartModel.Y)
+                                    .Width((float)chartModel.Width)
+                                    .Height((float)chartModel.Height)
+                                    .Image(chartImage); // تزریق بایت‌های عکس
+                            }
                         }
                     });
                 });
